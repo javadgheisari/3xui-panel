@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090b12" />
+    <meta name="description" content="Check your 3x-ui data usage and remaining allowance." />
+    <title>Usage Portal</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Usage Portal home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>usage<span class="brand-dot">.</span></span>
+      </a>
+      <div class="secure-pill"><span></span> Private lookup</div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="eyebrow"><span>01</span> YOUR CONNECTION, AT A GLANCE</div>
+        <h1 id="page-title">Know what’s left.<br /><em>Stay connected.</em></h1>
+        <p class="hero-copy">Enter the ID from your configuration to see live usage, remaining data, and expiry—without signing in.</p>
+
+        <form id="lookup-form" class="lookup" novalidate>
+          <label for="config-id">Configuration ID</label>
+          <div class="input-row">
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Z"/><path d="M12 14v2"/></svg>
+              <input id="config-id" name="id" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="160" placeholder="e.g. 7b6e8c20-5e21-4fd2-…" required />
+            </div>
+            <button id="submit-button" type="submit">
+              <span>Check usage</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+          <div class="form-meta">
+            <p id="form-hint">Your ID is used only for this lookup.</p>
+            <button id="demo-button" class="text-button" type="button" hidden>Try demo</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="status-region" class="status-region" aria-live="polite" aria-atomic="true">
+        <div id="empty-state" class="preview-card" aria-hidden="true">
+          <div class="preview-grid"></div>
+          <div class="preview-label">LIVE PLAN SNAPSHOT</div>
+          <div class="preview-orbit"><span></span><span></span><span></span></div>
+        </div>
+
+        <div id="loading-state" class="result-card loading" hidden>
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-ring"></div>
+          <div class="skeleton-row"><span></span><span></span><span></span></div>
+        </div>
+
+        <div id="error-state" class="error-card" role="alert" hidden>
+          <div class="error-icon">!</div>
+          <div>
+            <p class="error-kicker">LOOKUP UNSUCCESSFUL</p>
+            <h2 id="error-title">We couldn’t find that configuration.</h2>
+            <p id="error-message">Check the ID and try again.</p>
+          </div>
+          <button id="retry-button" type="button">Try again</button>
+        </div>
+
+        <article id="result-state" class="result-card" hidden>
+          <header class="result-header">
+            <div>
+              <p class="result-kicker">CURRENT PLAN</p>
+              <h2 id="plan-title">Your plan</h2>
+            </div>
+            <div id="plan-status" class="status-badge"><span></span> Active</div>
+          </header>
+
+          <div class="usage-layout">
+            <div class="usage-ring" role="img" aria-label="Data usage">
+              <svg viewBox="0 0 180 180" aria-hidden="true">
+                <circle class="ring-track" cx="90" cy="90" r="73"></circle>
+                <circle id="ring-value" class="ring-value" cx="90" cy="90" r="73"></circle>
+              </svg>
+              <div class="ring-copy">
+                <span id="usage-percent">0%</span>
+                <small>USED</small>
+              </div>
+            </div>
+            <div class="usage-primary">
+              <p>DATA REMAINING</p>
+              <div id="remaining-value" class="big-number">—</div>
+              <div id="usage-summary" class="usage-summary">— used of —</div>
+              <div class="progress"><span id="progress-bar"></span></div>
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric">
+              <div class="metric-icon download"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></svg></div>
+              <div><span>Downloaded</span><strong id="download-value">—</strong></div>
+            </div>
+            <div class="metric">
+              <div class="metric-icon upload"><svg viewBox="0 0 24 24"><path d="M12 21V9m-5 5 5-5 5 5M5 3h14"/></svg></div>
+              <div><span>Uploaded</span><strong id="upload-value">—</strong></div>
+            </div>
+            <div class="metric">
+              <div class="metric-icon calendar"><svg viewBox="0 0 24 24"><path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/></svg></div>
+              <div><span>Expires</span><strong id="expiry-value">—</strong></div>
+            </div>
+          </div>
+
+          <footer class="result-footer">
+            <span id="last-updated">Updated just now</span>
+            <button id="refresh-button" type="button"><svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5M18.5 9A7 7 0 0 0 6.3 6.3L4 9m16 6-2.3 2.7A7 7 0 0 1 5.5 15"/></svg> Refresh</button>
+          </footer>
+        </article>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <p>Powered by <a href="https://github.com/MHSanaei/3x-ui" rel="noreferrer">3x-ui</a></p>
+      <p><span></span> Usage data is fetched live from your provider</p>
+    </footer>
+  </body>
+</html>
+
