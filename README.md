@@ -17,13 +17,10 @@ Python 3.10 or newer is required. There are no third-party packages.
 ```bash
 cp -n .env.example .env
 # For a new setup, edit .env and set XUI_API_TOKEN to an enabled token with access to clients/get.
-set -a
-source .env
-set +a
 python3 app.py
 ```
 
-Open `http://127.0.0.1:8080`, enter a client name, and select **Check usage**. The `.env` file is ignored by Git.
+The server loads `.env` automatically. Open `http://127.0.0.1:8080`, enter a client name, and select **Check usage**. The `.env` file is ignored by Git. Explicit environment variables take precedence over `.env` values.
 
 `XUI_CLIENT_URL_TEMPLATE` in `.env.example` already points to the requested panel API. The `{name}` placeholder is replaced with a URL-encoded client name. The panel API is called from the Python server with `Authorization: Bearer <token>`.
 

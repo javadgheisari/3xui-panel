@@ -19,6 +19,35 @@ from usage import UsageError, lookup_from_environment
 ROOT = Path(__file__).resolve().parent
 STATIC_ROOT = ROOT / "static"
 MAX_NAME_LENGTH = 128
+ENV_KEYS = {
+    "XUI_CLIENT_URL_TEMPLATE",
+    "XUI_API_TOKEN",
+    "APP_HOST",
+    "APP_PORT",
+    "XUI_REQUEST_TIMEOUT",
+    "XUI_CACHE_SECONDS",
+    "XUI_RATE_LIMIT_PER_MINUTE",
+}
+
+
+def load_local_env(path: Path = ROOT / ".env") -> None:
+    """Load this project's .env without replacing explicitly set variables."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        return
+    for line in lines:
+        key, separator, value = line.strip().partition("=")
+        if not separator or key not in ENV_KEYS:
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        if not os.environ.get(key):
+            os.environ[key] = value
+
+
+load_local_env()
 
 
 class TTLCache:
@@ -177,7 +206,7 @@ class PortalHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    host = os.getenv("APP_HOST", "0.0.0.0")
+    host = os.getenv("APP_HOST", "127.0.0.1")
     port = int(os.getenv("APP_PORT", "3000"))
     server = ThreadingHTTPServer((host, port), PortalHandler)
     print(f"3x-ui usage portal listening on http://{host}:{port}")
