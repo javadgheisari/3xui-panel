@@ -1,8 +1,8 @@
 """3x-ui usage lookup adapters and normalization.
 
 The public subscription adapter consumes the same ``?format=info`` view-model
-used by 3x-ui's own subscription page. The authenticated adapter is for the
-actual VLESS/VMess client UUID and searches the panel's inbound list.
+used by 3x-ui's own subscription page. Authenticated adapters support both an
+actual VLESS/VMess UUID and a direct per-client lookup by config name/email.
 """
 
 from __future__ import annotations
@@ -279,6 +279,73 @@ def lookup_admin_uuid(
     )
 
 
+def _client_url(template: str, config_name: str) -> str:
+    if "{config_name}" not in template:
+        raise UsageError(
+            "XUI_CLIENT_URL_TEMPLATE must contain {config_name}.",
+            code="setup_required",
+            status=503,
+        )
+    _validate_url(template.replace("{config_name}", "sample-name"), "XUI_CLIENT_URL_TEMPLATE")
+    return template.replace("{config_name}", quote(config_name, safe=""))
+
+
+def lookup_client(
+    config_name: str,
+    *,
+    template: str,
+    api_token: str,
+    timeout: float,
+) -> UsageSnapshot:
+    """Fetch one client directly from ``/panel/api/clients/get/{email}``."""
+    if (
+        not config_name
+        or len(config_name) > 128
+        or config_name in {".", ".."}
+        or any(ord(char) < 32 or char in "/\\" for char in config_name)
+    ):
+        raise UsageError("Enter a valid client name.", code="invalid_id", status=400)
+    if not api_token:
+        raise UsageError("XUI_API_TOKEN is not configured.", code="setup_required", status=503)
+
+    payload, _ = _request_json(
+        _client_url(template, config_name), timeout=timeout, token=api_token
+    )
+    if not isinstance(payload, dict):
+        raise UsageError("The panel returned an unsupported client response.")
+    if payload.get("success") is False or ("obj" in payload and payload["obj"] is None):
+        raise UsageError("No configuration was found for that client name.", code="not_found", status=404)
+
+    data = payload.get("obj", payload)
+    if isinstance(data, list):
+        data = data[0] if data else None
+    if not isinstance(data, dict):
+        raise UsageError("The panel returned an unsupported client response.")
+
+    client = data.get("client") if isinstance(data.get("client"), dict) else data
+    traffic = data.get("traffic") if isinstance(data.get("traffic"), dict) else data
+    upload = _as_int(traffic.get("up", client.get("up")))
+    download = _as_int(traffic.get("down", client.get("down")))
+    total = _as_int(client.get("totalGB", client.get("total")))
+    used = upload + download
+    unlimited = total == 0
+    return UsageSnapshot(
+        identifier=config_name,
+        used_bytes=used,
+        upload_bytes=upload,
+        download_bytes=download,
+        total_bytes=total,
+        remaining_bytes=None if unlimited else max(0, total - used),
+        unlimited=unlimited,
+        enabled=bool(client.get("enable", True)),
+        online=bool(traffic["isOnline"]) if "isOnline" in traffic else None,
+        expires_at=_timestamp_ms(client.get("expiryTime") or traffic.get("expiryTime")),
+        last_online_at=_timestamp_ms(traffic.get("lastOnline")),
+        title=_safe_title(client.get("remark") or client.get("email") or config_name),
+        fetched_at=int(time.time() * 1000),
+    )
+
+
 def demo_snapshot(identifier: str) -> UsageSnapshot:
     if identifier not in {"demo", "demo-7b6e-4fd2"}:
         raise UsageError("Use demo-7b6e-4fd2 while demo mode is enabled.", code="not_found", status=404)
@@ -322,8 +389,22 @@ def lookup_from_environment(identifier: str) -> UsageSnapshot:
             api_token=os.getenv("XUI_API_TOKEN", "").strip(),
             timeout=timeout,
         )
+    if mode == "client":
+        template = os.getenv("XUI_CLIENT_URL_TEMPLATE", "").strip()
+        if not template:
+            raise UsageError(
+                "XUI_CLIENT_URL_TEMPLATE is not configured.",
+                code="setup_required",
+                status=503,
+            )
+        return lookup_client(
+            identifier,
+            template=template,
+            api_token=os.getenv("XUI_API_TOKEN", "").strip(),
+            timeout=timeout,
+        )
     raise UsageError(
-        "XUI_LOOKUP_MODE must be subscription or admin_uuid.",
+        "XUI_LOOKUP_MODE must be subscription, admin_uuid, or client.",
         code="setup_required",
         status=503,
     )

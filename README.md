@@ -6,6 +6,7 @@ It supports two 3x-ui lookup paths:
 
 - `subscription` (recommended): uses the public subscription server's `?format=info` response. The customer enters their `subId`, which many providers call a subscription UUID.
 - `admin_uuid`: uses a server-side 3x-ui API token to find the actual VLESS/VMess configuration UUID in `/panel/api/inbounds/list`.
+- `client`: fetches one client directly from `/panel/api/clients/get/{config_name}`. The customer enters the 3x-ui client name/email.
 
 The browser never receives the panel URL, API token, raw subscription links, email address, or full panel response.
 
@@ -57,6 +58,19 @@ python3 app.py
 ```
 
 Keep the token server-side and use the narrowest token scope your 3x-ui version supports. Put this app behind HTTPS in production.
+
+### Client name or email
+
+For panels that expose the direct client lookup endpoint, configure its full URL as a template. Keep your panel's base path in the template and replace the final name with `{config_name}`:
+
+```bash
+export XUI_LOOKUP_MODE=client
+export XUI_CLIENT_URL_TEMPLATE='https://panel.example.com/your-panel-path/panel/api/clients/get/{config_name}'
+export XUI_API_TOKEN='your-api-token'
+python3 app.py
+```
+
+The client name is URL-encoded before it is added to the endpoint. The panel URL and token stay server-side.
 
 ## Tests
 
