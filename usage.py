@@ -32,8 +32,8 @@ class UsageError(Exception):
 class UsageSnapshot:
     identifier: str
     used_bytes: int
-    upload_bytes: int
-    download_bytes: int
+    upload_bytes: int | None
+    download_bytes: int | None
     total_bytes: int
     remaining_bytes: int | None
     unlimited: bool
@@ -125,8 +125,18 @@ def _request_json(
     except HTTPError as exc:
         if exc.code == 404:
             raise UsageError(not_found_message, code="not_found", status=404) from exc
-        if exc.code in {401, 403}:
-            raise UsageError("The panel rejected the configured credentials.", code="panel_auth", status=502) from exc
+        if exc.code == 401:
+            raise UsageError(
+                "The panel rejected XUI_API_TOKEN. Check that it is an enabled API token from the panel's Security settings.",
+                code="panel_auth",
+                status=502,
+            ) from exc
+        if exc.code == 403:
+            raise UsageError(
+                "XUI_API_TOKEN is not permitted to access this panel endpoint. Use a token with the required API permissions.",
+                code="panel_permission",
+                status=502,
+            ) from exc
         raise UsageError(f"The panel returned HTTP {exc.code}.") from exc
     except (URLError, TimeoutError, OSError) as exc:
         raise UsageError("The 3x-ui panel could not be reached. Please try again shortly.") from exc
@@ -335,10 +345,17 @@ def lookup_client(
 
     client = data.get("client") if isinstance(data.get("client"), dict) else data
     traffic = data.get("traffic") if isinstance(data.get("traffic"), dict) else data
-    upload = _as_int(traffic.get("up", client.get("up")))
-    download = _as_int(traffic.get("down", client.get("down")))
+    upload_value = traffic.get("up", client.get("up"))
+    download_value = traffic.get("down", client.get("down"))
+    has_directional_traffic = upload_value is not None and download_value is not None
+    upload = _as_int(upload_value) if has_directional_traffic else None
+    download = _as_int(download_value) if has_directional_traffic else None
+    used = (
+        upload + download
+        if has_directional_traffic
+        else _as_int(data.get("usedTraffic", traffic.get("usedTraffic", client.get("usedTraffic"))))
+    )
     total = _as_int(client.get("totalGB", client.get("total")))
-    used = upload + download
     unlimited = total == 0
     return UsageSnapshot(
         identifier=config_name,
