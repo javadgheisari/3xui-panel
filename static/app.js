@@ -8,6 +8,7 @@ const resultState = document.querySelector('#result-state');
 const retryButton = document.querySelector('#retry-button');
 const refreshButton = document.querySelector('#refresh-button');
 let activeName = '';
+const persianNumber = new Intl.NumberFormat('fa-IR');
 
 function showState(state) {
   emptyState.hidden = state !== 'empty';
@@ -19,29 +20,29 @@ function showState(state) {
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return '—';
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  if (bytes === 0) return '۰ بایت';
+  const units = ['بایت', 'کیلوبایت', 'مگابایت', 'گیگابایت', 'ترابایت', 'پتابایت'];
   const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
   const value = bytes / (1024 ** index);
   const digits = value >= 100 || index === 0 ? 0 : value >= 10 ? 1 : 2;
-  return `${value.toFixed(digits).replace(/\.0+$|(?<=\.[0-9])0$/, '')} ${units[index]}`;
+  return `${new Intl.NumberFormat('fa-IR', { maximumFractionDigits: digits }).format(value)} ${units[index]}`;
 }
 
 function formatExpiry(expiryTime) {
-  if (expiryTime === 0) return 'No expiry';
-  if (expiryTime < 0) return 'Starts on first use';
+  if (expiryTime === 0) return 'بدون تاریخ انقضا';
+  if (expiryTime < 0) return 'پس از اولین استفاده فعال می‌شود';
   const timestamp = expiryTime < 10_000_000_000 ? expiryTime * 1000 : expiryTime;
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
 }
 
 function statusFor(data) {
-  if (!data.enable) return { label: 'Disabled', active: false };
+  if (!data.enable) return { label: 'غیرفعال', active: false };
   const expiry = data.expiryTime < 10_000_000_000 ? data.expiryTime * 1000 : data.expiryTime;
-  if (expiry > 0 && expiry <= Date.now()) return { label: 'Expired', active: false };
-  if (data.remainingTraffic !== null && data.remainingTraffic <= 0) return { label: 'Depleted', active: false };
-  return { label: 'Active', active: true };
+  if (expiry > 0 && expiry <= Date.now()) return { label: 'منقضی‌شده', active: false };
+  if (data.remainingTraffic !== null && data.remainingTraffic <= 0) return { label: 'حجم تمام شده', active: false };
+  return { label: 'فعال', active: true };
 }
 
 function render(data) {
@@ -49,18 +50,20 @@ function render(data) {
   const percent = unlimited ? 0 : Math.min(100, Math.max(0, (data.usedTraffic / data.totalGB) * 100));
   const circumference = 2 * Math.PI * 73;
   document.querySelector('#ring-value').style.strokeDashoffset = `${circumference * (1 - percent / 100)}`;
-  document.querySelector('#usage-percent').textContent = unlimited ? '∞' : `${Math.round(percent)}%`;
+  document.querySelector('#usage-percent').textContent = unlimited ? '∞' : `${persianNumber.format(Math.round(percent))}٪`;
   document.querySelector('#progress-bar').style.width = `${percent}%`;
   document.querySelector('#client-title').textContent = data.name;
-  document.querySelector('#remaining-value').textContent = unlimited ? 'Unlimited' : formatBytes(data.remainingTraffic);
+  document.querySelector('#remaining-value').textContent = unlimited ? 'نامحدود' : formatBytes(data.remainingTraffic);
   document.querySelector('#usage-summary').textContent = unlimited
-    ? `${formatBytes(data.usedTraffic)} used · no data limit`
-    : `${formatBytes(data.usedTraffic)} used of ${formatBytes(data.totalGB)}`;
+    ? `${formatBytes(data.usedTraffic)} مصرف‌شده · بدون محدودیت حجم`
+    : `${formatBytes(data.usedTraffic)} مصرف‌شده از ${formatBytes(data.totalGB)}`;
   document.querySelector('#used-value').textContent = formatBytes(data.usedTraffic);
-  document.querySelector('#total-value').textContent = unlimited ? 'Unlimited' : formatBytes(data.totalGB);
+  document.querySelector('#total-value').textContent = unlimited ? 'نامحدود' : formatBytes(data.totalGB);
   document.querySelector('#expiry-value').textContent = formatExpiry(data.expiryTime);
-  document.querySelector('#inbounds-value').textContent = data.inboundIds.length ? data.inboundIds.join(', ') : 'None';
-  document.querySelector('#last-updated').textContent = `Updated ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(data.fetchedAt))}`;
+  document.querySelector('#inbounds-value').textContent = data.inboundIds.length
+    ? data.inboundIds.map((id) => persianNumber.format(id)).join('، ')
+    : 'هیچ‌کدام';
+  document.querySelector('#last-updated').textContent = `به‌روزرسانی در ${new Intl.DateTimeFormat('fa-IR', { hour: 'numeric', minute: '2-digit' }).format(new Date(data.fetchedAt))}`;
 
   const status = statusFor(data);
   const badge = document.querySelector('#plan-status');
@@ -71,12 +74,12 @@ function render(data) {
 
 function renderError(error) {
   const title = error.code === 'not_found'
-    ? 'We couldn’t find that client.'
+    ? 'کاربری با این نام پیدا نشد.'
     : error.code === 'setup_required'
-      ? 'The portal needs to be connected.'
-      : 'The lookup didn’t complete.';
+      ? 'تنظیمات اتصال کامل نیست.'
+      : 'دریافت اطلاعات انجام نشد.';
   document.querySelector('#error-title').textContent = title;
-  document.querySelector('#error-message').textContent = error.message || 'Please try again shortly.';
+  document.querySelector('#error-message').textContent = error.message || 'کمی بعد دوباره تلاش کنید.';
   showState('error');
 }
 
@@ -93,7 +96,7 @@ async function lookup(name) {
       cache: 'no-store',
     });
     const payload = await response.json();
-    if (!response.ok) throw payload.error || { message: 'The lookup failed.' };
+    if (!response.ok) throw payload.error || { message: 'دریافت اطلاعات انجام نشد.' };
     render(payload.data);
   } catch (error) {
     renderError(error);

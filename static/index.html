@@ -1,44 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#090b12" />
-    <meta name="description" content="Check a 3x-ui client's traffic usage and remaining allowance." />
-    <title>Client Traffic</title>
+    <meta name="description" content="مشاهده مصرف اینترنت و حجم باقی‌مانده کاربر" />
+    <title>مصرف اینترنت کاربران</title>
     <link rel="stylesheet" href="/static/styles.css" />
     <script src="/static/app.js" defer></script>
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
     <header class="topbar">
-      <a class="brand" href="/" aria-label="Client Traffic home">
+      <a class="brand" href="/" aria-label="صفحه اصلی مصرف اینترنت">
         <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span>usage<span class="brand-dot">.</span></span>
+        <span>مصرف<span class="brand-dot">.</span></span>
       </a>
-      <div class="secure-pill"><span></span> Live client traffic</div>
+      <div class="secure-pill"><span></span> مصرف زنده کاربران</div>
     </header>
 
     <main>
       <section class="hero" aria-labelledby="page-title">
-        <div class="eyebrow"><span>01</span> CLIENT TRAFFIC, AT A GLANCE</div>
-        <h1 id="page-title">See your usage.<br /><em>Know what’s left.</em></h1>
-        <p class="hero-copy">Enter your client name to see its current traffic, allowance, and expiry from the panel.</p>
+        <div class="eyebrow"><span>۰۱</span> نمای کلی مصرف اینترنت</div>
+        <h1 id="page-title">مصرف خود را ببینید.<br /><em>از باقی‌مانده باخبر شوید.</em></h1>
+        <p class="hero-copy">نام کاربر را وارد کنید تا مصرف، حجم باقی‌مانده و تاریخ انقضای سرویس را ببینید.</p>
 
         <form id="lookup-form" class="lookup" novalidate>
-          <label for="client-name">Client name</label>
+          <label for="client-name">نام کاربر</label>
           <div class="input-row">
             <div class="input-wrap">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg>
-              <input id="client-name" name="name" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="128" placeholder="e.g. ali" required />
+              <input id="client-name" name="name" type="text" dir="auto" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="128" placeholder="مثلاً ali" required />
             </div>
             <button id="submit-button" type="submit">
-              <span>Check usage</span>
+              <span>بررسی مصرف</span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
             </button>
           </div>
           <div class="form-meta">
-            <p id="form-hint">The client name is used only for this lookup.</p>
+            <p id="form-hint">نام کاربر فقط برای دریافت اطلاعات مصرف استفاده می‌شود.</p>
           </div>
         </form>
       </section>
@@ -46,7 +46,7 @@
       <section id="status-region" class="status-region" aria-live="polite" aria-atomic="true">
         <div id="empty-state" class="preview-card" aria-hidden="true">
           <div class="preview-grid"></div>
-          <div class="preview-label">LIVE TRAFFIC SNAPSHOT</div>
+          <div class="preview-label">نمای زنده مصرف</div>
           <div class="preview-orbit"><span></span><span></span><span></span></div>
         </div>
 
@@ -59,37 +59,37 @@
         <div id="error-state" class="error-card" role="alert" hidden>
           <div class="error-icon">!</div>
           <div>
-            <p class="error-kicker">LOOKUP UNSUCCESSFUL</p>
-            <h2 id="error-title">We couldn’t find that client.</h2>
-            <p id="error-message">Check the name and try again.</p>
+            <p class="error-kicker">جست‌وجو ناموفق بود</p>
+            <h2 id="error-title">کاربری با این نام پیدا نشد.</h2>
+            <p id="error-message">نام را بررسی کنید و دوباره تلاش کنید.</p>
           </div>
-          <button id="retry-button" type="button">Try again</button>
+          <button id="retry-button" type="button">تلاش دوباره</button>
         </div>
 
         <article id="result-state" class="result-card" hidden>
           <header class="result-header">
             <div>
-              <p class="result-kicker">CLIENT</p>
-              <h2 id="client-title">—</h2>
+              <p class="result-kicker">کاربر</p>
+              <h2 id="client-title" dir="auto">—</h2>
             </div>
-            <div id="plan-status" class="status-badge"><span></span> Active</div>
+            <div id="plan-status" class="status-badge"><span></span> فعال</div>
           </header>
 
           <div class="usage-layout">
-            <div class="usage-ring" role="img" aria-label="Data usage">
+            <div class="usage-ring" role="img" aria-label="میزان مصرف اینترنت">
               <svg viewBox="0 0 180 180" aria-hidden="true">
                 <circle class="ring-track" cx="90" cy="90" r="73"></circle>
                 <circle id="ring-value" class="ring-value" cx="90" cy="90" r="73"></circle>
               </svg>
               <div class="ring-copy">
-                <span id="usage-percent">0%</span>
-                <small>USED</small>
+                <span id="usage-percent">۰٪</span>
+                <small>مصرف‌شده</small>
               </div>
             </div>
             <div class="usage-primary">
-              <p>DATA REMAINING</p>
+              <p>حجم باقی‌مانده</p>
               <div id="remaining-value" class="big-number">—</div>
-              <div id="usage-summary" class="usage-summary">— used of —</div>
+              <div id="usage-summary" class="usage-summary">— مصرف‌شده از —</div>
               <div class="progress"><span id="progress-bar"></span></div>
             </div>
           </div>
@@ -97,31 +97,31 @@
           <div class="metric-grid">
             <div class="metric">
               <div class="metric-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></svg></div>
-              <div><span>Used traffic</span><strong id="used-value">—</strong></div>
+              <div><span>حجم مصرف‌شده</span><strong id="used-value">—</strong></div>
             </div>
             <div class="metric">
               <div class="metric-icon allowance"><svg viewBox="0 0 24 24"><path d="M12 21V9m-5 5 5-5 5 5M5 3h14"/></svg></div>
-              <div><span>Data allowance</span><strong id="total-value">—</strong></div>
+              <div><span>حجم کل</span><strong id="total-value">—</strong></div>
             </div>
             <div class="metric">
               <div class="metric-icon calendar"><svg viewBox="0 0 24 24"><path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/></svg></div>
-              <div><span>Expires</span><strong id="expiry-value">—</strong></div>
+              <div><span>تاریخ انقضا</span><strong id="expiry-value">—</strong></div>
             </div>
           </div>
 
-          <div class="inbound-detail">Attached inbound<span id="inbounds-value">—</span></div>
+          <div class="inbound-detail">ورودی‌های متصل<span id="inbounds-value">—</span></div>
 
           <footer class="result-footer">
             <span id="last-updated">—</span>
-            <button id="refresh-button" type="button"><svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5M18.5 9A7 7 0 0 0 6.3 6.3L4 9m16 6-2.3 2.7A7 7 0 0 1 5.5 15"/></svg> Refresh</button>
+            <button id="refresh-button" type="button"><svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5M18.5 9A7 7 0 0 0 6.3 6.3L4 9m16 6-2.3 2.7A7 7 0 0 1 5.5 15"/></svg> به‌روزرسانی</button>
           </footer>
         </article>
       </section>
     </main>
 
     <footer class="page-footer">
-      <p>Powered by <a href="https://github.com/MHSanaei/3x-ui" rel="noreferrer">3x-ui</a></p>
-      <p><span></span> Usage data is fetched live from your provider</p>
+      <p>قدرت‌گرفته از <a href="https://github.com/MHSanaei/3x-ui" rel="noreferrer">3x-ui</a></p>
+      <p><span></span> اطلاعات مصرف مستقیماً از پنل دریافت می‌شود</p>
     </footer>
   </body>
 </html>

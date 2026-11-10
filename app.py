@@ -119,7 +119,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 
     def _send_json(self, status: int, payload: dict, *, cache: str = "no-store") -> None:
-        body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+        body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         self.send_response(status)
         self._security_headers()
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -133,7 +133,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         try:
             body = path.read_bytes()
         except FileNotFoundError:
-            self._send_json(404, {"error": {"code": "not_found", "message": "Page not found."}})
+            self._send_json(404, {"error": {"code": "not_found", "message": "صفحه پیدا نشد."}})
             return
         content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         self.send_response(200)
@@ -154,14 +154,14 @@ class PortalHandler(BaseHTTPRequestHandler):
         if not RATE_LIMITER.allow(self._client_ip()):
             self._send_json(
                 429,
-                {"error": {"code": "rate_limited", "message": "Too many lookups. Please wait a minute."}},
+                {"error": {"code": "rate_limited", "message": "تعداد درخواست‌ها زیاد است. یک دقیقه دیگر تلاش کنید."}},
             )
             return
         name = parse_qs(query, keep_blank_values=True).get("name", [""])[0].strip()
         if not name or len(name) > MAX_NAME_LENGTH:
             self._send_json(
                 400,
-                {"error": {"code": "invalid_name", "message": "Enter a valid client name."}},
+                {"error": {"code": "invalid_name", "message": "نام کاربر معتبر وارد کنید."}},
             )
             return
 
@@ -177,7 +177,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         except Exception:
             self._send_json(
                 500,
-                {"error": {"code": "internal_error", "message": "The lookup could not be completed."}},
+                {"error": {"code": "internal_error", "message": "دریافت اطلاعات انجام نشد."}},
             )
             return
         CACHE.put(name, snapshot)
@@ -195,11 +195,11 @@ class PortalHandler(BaseHTTPRequestHandler):
             relative = parsed.path.removeprefix("/static/")
             candidate = (STATIC_ROOT / relative).resolve()
             if STATIC_ROOT.resolve() not in candidate.parents:
-                self._send_json(404, {"error": {"code": "not_found", "message": "Page not found."}})
+                self._send_json(404, {"error": {"code": "not_found", "message": "صفحه پیدا نشد."}})
             else:
                 self._send_file(candidate)
         else:
-            self._send_json(404, {"error": {"code": "not_found", "message": "Page not found."}})
+            self._send_json(404, {"error": {"code": "not_found", "message": "صفحه پیدا نشد."}})
 
     def do_HEAD(self) -> None:
         self.do_GET()
