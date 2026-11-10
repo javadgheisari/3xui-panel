@@ -22,7 +22,7 @@ set +a
 python3 app.py
 ```
 
-Then open `http://127.0.0.1:3000`.
+Then open `http://0.0.0.0:3000`.
 
 For a UI preview without a panel:
 
@@ -81,7 +81,7 @@ python3 -m unittest discover -s tests -v
 ## Production notes
 
 - Terminate HTTPS at a reverse proxy such as Caddy or Nginx.
-- Run with `APP_HOST=127.0.0.1` behind that proxy.
+- Run with `APP_HOST=0.0.0.0` behind that proxy.
 - The built-in server applies a per-process rate limit and a short cache. For multiple replicas, apply a shared rate limit at the proxy too.
 - TLS certificate verification is always enabled for the upstream 3x-ui server.
 - If your 3x-ui panel is older and does not support `?format=info`, the app falls back to the standard `subscription-userinfo` response header when available.
