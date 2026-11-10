@@ -22,7 +22,7 @@ set +a
 python3 app.py
 ```
 
-Then open `http://127.0.0.1:8080`.
+Then open `http://127.0.0.1:3000`.
 
 For a UI preview without a panel:
 

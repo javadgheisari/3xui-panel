@@ -178,7 +178,7 @@ class PortalHandler(BaseHTTPRequestHandler):
 
 def main() -> None:
     host = os.getenv("APP_HOST", "127.0.0.1")
-    port = int(os.getenv("APP_PORT", "8080"))
+    port = int(os.getenv("APP_PORT", "3000"))
     server = ThreadingHTTPServer((host, port), PortalHandler)
     print(f"3x-ui usage portal listening on http://{host}:{port}")
     try:
