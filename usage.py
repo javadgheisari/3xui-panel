@@ -98,7 +98,13 @@ def _validate_url(url: str, variable_name: str) -> None:
         )
 
 
-def _request_json(url: str, *, timeout: float, token: str | None = None) -> tuple[Any, Mapping[str, str]]:
+def _request_json(
+    url: str,
+    *,
+    timeout: float,
+    token: str | None = None,
+    not_found_message: str = "No active configuration was found for that ID.",
+) -> tuple[Any, Mapping[str, str]]:
     headers = {
         "Accept": "application/json",
         "User-Agent": "3xui-usage-portal/1.0",
@@ -118,7 +124,7 @@ def _request_json(url: str, *, timeout: float, token: str | None = None) -> tupl
                 raise UsageError("The panel returned an invalid response.") from exc
     except HTTPError as exc:
         if exc.code == 404:
-            raise UsageError("No active configuration was found for that ID.", code="not_found", status=404) from exc
+            raise UsageError(not_found_message, code="not_found", status=404) from exc
         if exc.code in {401, 403}:
             raise UsageError("The panel rejected the configured credentials.", code="panel_auth", status=502) from exc
         raise UsageError(f"The panel returned HTTP {exc.code}.") from exc
@@ -309,7 +315,12 @@ def lookup_client(
         raise UsageError("XUI_API_TOKEN is not configured.", code="setup_required", status=503)
 
     payload, _ = _request_json(
-        _client_url(template, config_name), timeout=timeout, token=api_token
+        _client_url(template, config_name),
+        timeout=timeout,
+        token=api_token,
+        not_found_message=(
+            "The panel returned 404 for this client lookup. Check the config name and client API URL."
+        ),
     )
     if not isinstance(payload, dict):
         raise UsageError("The panel returned an unsupported client response.")
