@@ -4,33 +4,33 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#090b12" />
-    <meta name="description" content="Check your 3x-ui data usage and remaining allowance." />
-    <title>Usage Portal</title>
+    <meta name="description" content="Check a 3x-ui client's traffic usage and remaining allowance." />
+    <title>Client Traffic</title>
     <link rel="stylesheet" href="/static/styles.css" />
     <script src="/static/app.js" defer></script>
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
     <header class="topbar">
-      <a class="brand" href="/" aria-label="Usage Portal home">
+      <a class="brand" href="/" aria-label="Client Traffic home">
         <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
         <span>usage<span class="brand-dot">.</span></span>
       </a>
-      <div class="secure-pill"><span></span> Private lookup</div>
+      <div class="secure-pill"><span></span> Live client traffic</div>
     </header>
 
     <main>
       <section class="hero" aria-labelledby="page-title">
-        <div class="eyebrow"><span>01</span> YOUR CONNECTION, AT A GLANCE</div>
-        <h1 id="page-title">Know what’s left.<br /><em>Stay connected.</em></h1>
-        <p class="hero-copy">Enter the ID from your configuration to see live usage, remaining data, and expiry—without signing in.</p>
+        <div class="eyebrow"><span>01</span> CLIENT TRAFFIC, AT A GLANCE</div>
+        <h1 id="page-title">See your usage.<br /><em>Know what’s left.</em></h1>
+        <p class="hero-copy">Enter your client name to see its current traffic, allowance, and expiry from the panel.</p>
 
         <form id="lookup-form" class="lookup" novalidate>
-          <label for="config-id">Configuration ID</label>
+          <label for="client-name">Client name</label>
           <div class="input-row">
             <div class="input-wrap">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Z"/><path d="M12 14v2"/></svg>
-              <input id="config-id" name="id" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="160" placeholder="e.g. 7b6e8c20-5e21-4fd2-…" required />
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg>
+              <input id="client-name" name="name" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="128" placeholder="e.g. arezoo" required />
             </div>
             <button id="submit-button" type="submit">
               <span>Check usage</span>
@@ -38,8 +38,7 @@
             </button>
           </div>
           <div class="form-meta">
-            <p id="form-hint">Your ID is used only for this lookup.</p>
-            <button id="demo-button" class="text-button" type="button" hidden>Try demo</button>
+            <p id="form-hint">The client name is used only for this lookup.</p>
           </div>
         </form>
       </section>
@@ -47,7 +46,7 @@
       <section id="status-region" class="status-region" aria-live="polite" aria-atomic="true">
         <div id="empty-state" class="preview-card" aria-hidden="true">
           <div class="preview-grid"></div>
-          <div class="preview-label">LIVE PLAN SNAPSHOT</div>
+          <div class="preview-label">LIVE TRAFFIC SNAPSHOT</div>
           <div class="preview-orbit"><span></span><span></span><span></span></div>
         </div>
 
@@ -61,8 +60,8 @@
           <div class="error-icon">!</div>
           <div>
             <p class="error-kicker">LOOKUP UNSUCCESSFUL</p>
-            <h2 id="error-title">We couldn’t find that configuration.</h2>
-            <p id="error-message">Check the ID and try again.</p>
+            <h2 id="error-title">We couldn’t find that client.</h2>
+            <p id="error-message">Check the name and try again.</p>
           </div>
           <button id="retry-button" type="button">Try again</button>
         </div>
@@ -70,8 +69,8 @@
         <article id="result-state" class="result-card" hidden>
           <header class="result-header">
             <div>
-              <p class="result-kicker">CURRENT PLAN</p>
-              <h2 id="plan-title">Your plan</h2>
+              <p class="result-kicker">CLIENT</p>
+              <h2 id="client-title">—</h2>
             </div>
             <div id="plan-status" class="status-badge"><span></span> Active</div>
           </header>
@@ -97,12 +96,12 @@
 
           <div class="metric-grid">
             <div class="metric">
-              <div class="metric-icon download"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></svg></div>
-              <div><span>Downloaded</span><strong id="download-value">—</strong></div>
+              <div class="metric-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></svg></div>
+              <div><span>Used traffic</span><strong id="used-value">—</strong></div>
             </div>
             <div class="metric">
-              <div class="metric-icon upload"><svg viewBox="0 0 24 24"><path d="M12 21V9m-5 5 5-5 5 5M5 3h14"/></svg></div>
-              <div><span>Uploaded</span><strong id="upload-value">—</strong></div>
+              <div class="metric-icon allowance"><svg viewBox="0 0 24 24"><path d="M12 21V9m-5 5 5-5 5 5M5 3h14"/></svg></div>
+              <div><span>Data allowance</span><strong id="total-value">—</strong></div>
             </div>
             <div class="metric">
               <div class="metric-icon calendar"><svg viewBox="0 0 24 24"><path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/></svg></div>
@@ -110,8 +109,10 @@
             </div>
           </div>
 
+          <div class="inbound-detail">Attached inbound<span id="inbounds-value">—</span></div>
+
           <footer class="result-footer">
-            <span id="last-updated">Updated just now</span>
+            <span id="last-updated">—</span>
             <button id="refresh-button" type="button"><svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5M18.5 9A7 7 0 0 0 6.3 6.3L4 9m16 6-2.3 2.7A7 7 0 0 1 5.5 15"/></svg> Refresh</button>
           </footer>
         </article>

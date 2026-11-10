@@ -18,7 +18,7 @@ from usage import UsageError, lookup_from_environment
 
 ROOT = Path(__file__).resolve().parent
 STATIC_ROOT = ROOT / "static"
-MAX_ID_LENGTH = 160
+MAX_NAME_LENGTH = 128
 
 
 class TTLCache:
@@ -128,20 +128,20 @@ class PortalHandler(BaseHTTPRequestHandler):
                 {"error": {"code": "rate_limited", "message": "Too many lookups. Please wait a minute."}},
             )
             return
-        identifier = parse_qs(query, keep_blank_values=True).get("id", [""])[0].strip()
-        if not identifier or len(identifier) > MAX_ID_LENGTH:
+        name = parse_qs(query, keep_blank_values=True).get("name", [""])[0].strip()
+        if not name or len(name) > MAX_NAME_LENGTH:
             self._send_json(
                 400,
-                {"error": {"code": "invalid_id", "message": "Enter a valid configuration ID."}},
+                {"error": {"code": "invalid_name", "message": "Enter a valid client name."}},
             )
             return
 
-        cached = CACHE.get(identifier)
+        cached = CACHE.get(name)
         if cached:
             self._send_json(200, {"data": cached}, cache="private, max-age=5")
             return
         try:
-            snapshot = lookup_from_environment(identifier).public_dict()
+            snapshot = lookup_from_environment(name).public_dict()
         except UsageError as exc:
             self._send_json(exc.status, {"error": {"code": exc.code, "message": str(exc)}})
             return
@@ -151,7 +151,7 @@ class PortalHandler(BaseHTTPRequestHandler):
                 {"error": {"code": "internal_error", "message": "The lookup could not be completed."}},
             )
             return
-        CACHE.put(identifier, snapshot)
+        CACHE.put(name, snapshot)
         self._send_json(200, {"data": snapshot}, cache="private, max-age=5")
 
     def do_GET(self) -> None:

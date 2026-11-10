@@ -1,82 +1,76 @@
-import json
 import unittest
 from unittest.mock import patch
 
-from usage import UsageError, lookup_admin_uuid, lookup_subscription
+from usage import UsageError, lookup_client
 
 
-class UsageLookupTests(unittest.TestCase):
-    @patch("usage._request_json")
-    def test_subscription_view_model_is_normalized(self, request_json):
-        request_json.return_value = (
-            {
-                "enabled": True,
-                "isOnline": True,
-                "uploadByte": 100,
-                "downloadByte": 300,
-                "totalByte": 1000,
-                "expire": 2_000_000_000,
-                "lastOnline": 2_000_000_000_000,
-                "subTitle": "  Gold   plan  ",
+TEMPLATE = "https://panel.example.com/base/panel/api/clients/get/{name}"
+
+
+class ClientLookupTests(unittest.TestCase):
+    @patch("usage._request_client")
+    def test_panel_volume_response_is_normalized_without_credentials(self, request_client):
+        request_client.return_value = {
+            "success": True,
+            "obj": {
+                "client": {
+                    "email": "alice",
+                    "password": "must-stay-on-server",
+                    "totalGB": 21_474_836_480,
+                    "expiryTime": 0,
+                    "enable": True,
+                },
+                "usedTraffic": 21_257_943_356,
+                "inboundIds": [4],
             },
-            {},
+        }
+
+        result = lookup_client("alice", template=TEMPLATE, api_token="token", timeout=2).public_dict()
+
+        self.assertEqual(result["usedTraffic"], 21_257_943_356)
+        self.assertEqual(result["totalGB"], 21_474_836_480)
+        self.assertEqual(result["remainingTraffic"], 216_893_124)
+        self.assertEqual(result["inboundIds"], [4])
+        self.assertNotIn("password", result)
+        self.assertNotIn("client", result)
+        request_client.assert_called_once_with(
+            "https://panel.example.com/base/panel/api/clients/get/alice", "token", 2
         )
 
-        result = lookup_subscription(
-            "abc-1234",
-            template="https://sub.example.com/random-path/{id}",
-            timeout=2,
-        )
-
-        self.assertEqual(result.used_bytes, 400)
-        self.assertEqual(result.remaining_bytes, 600)
-        self.assertEqual(result.expires_at, 2_000_000_000_000)
-        self.assertEqual(result.title, "Gold plan")
-        called_url = request_json.call_args.args[0]
-        self.assertEqual(called_url, "https://sub.example.com/random-path/abc-1234?format=info")
-
-    @patch("usage._request_json")
-    def test_subscription_headers_are_an_older_panel_fallback(self, request_json):
-        request_json.return_value = (
-            {"enabled": True},
-            {"subscription-userinfo": "upload=10; download=20; total=100; expire=2000000000"},
-        )
-        result = lookup_subscription(
-            "abcd1234",
-            template="https://sub.example.com/sub/{id}",
-            timeout=2,
-        )
-        self.assertEqual((result.upload_bytes, result.download_bytes), (10, 20))
-        self.assertEqual(result.remaining_bytes, 70)
-
-    @patch("usage._request_json")
-    def test_admin_uuid_finds_nested_client_and_traffic(self, request_json):
-        uuid = "e18c9a96-71bf-48d4-933f-8b9a46d4290c"
-        request_json.return_value = (
-            {
-                "success": True,
-                "obj": [
-                    {
-                        "enable": True,
-                        "remark": "Primary",
-                        "settings": json.dumps({"clients": [{"id": uuid, "email": "alice", "enable": True, "totalGB": 1000, "expiryTime": 2_000_000_000_000}]}),
-                        "clientStats": [{"email": "alice", "up": 100, "down": 250, "enable": True}],
-                    }
-                ],
+    @patch("usage._request_client")
+    def test_name_is_encoded_in_url(self, request_client):
+        request_client.return_value = {
+            "success": True,
+            "obj": {
+                "client": {"totalGB": 0, "expiryTime": 0, "enable": True},
+                "usedTraffic": 100,
+                "inboundIds": [],
             },
-            {},
+        }
+        result = lookup_client("alice@example.com", template=TEMPLATE, api_token="token", timeout=2)
+        self.assertIsNone(result.remainingTraffic)
+        self.assertEqual(
+            request_client.call_args.args[0],
+            "https://panel.example.com/base/panel/api/clients/get/alice%40example.com",
         )
-        result = lookup_admin_uuid(uuid, panel_url="https://panel.example.com/base", api_token="secret", timeout=2)
-        self.assertEqual(result.used_bytes, 350)
-        self.assertEqual(result.remaining_bytes, 650)
-        self.assertEqual(result.title, "Primary")
 
-    def test_invalid_subscription_id_is_rejected_before_network(self):
+    @patch("usage._request_client")
+    def test_missing_volume_is_rejected_instead_of_shown_as_zero(self, request_client):
+        request_client.return_value = {
+            "success": True,
+            "obj": {
+                "client": {"totalGB": 1000, "expiryTime": 0, "enable": True},
+                "inboundIds": [],
+            },
+        }
+        with self.assertRaises(UsageError):
+            lookup_client("alice", template=TEMPLATE, api_token="token", timeout=2)
+
+    def test_invalid_name_is_rejected_before_request(self):
         with self.assertRaises(UsageError) as context:
-            lookup_subscription("bad/id", template="https://example.com/{id}", timeout=2)
-        self.assertEqual(context.exception.code, "invalid_id")
+            lookup_client("../alice", template=TEMPLATE, api_token="token", timeout=2)
+        self.assertEqual(context.exception.code, "invalid_name")
 
 
 if __name__ == "__main__":
     unittest.main()
-
