@@ -70,6 +70,15 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
 }
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.language-switch { padding: 8px 12px; border: 1px solid var(--line); border-radius: 99px; background: rgba(255,255,255,.04); color: var(--aqua); font-size: 12px; cursor: pointer; }
+.language-switch:hover { border-color: var(--teal); }
+html[dir="ltr"] .input-wrap svg { right: auto; left: 17px; }
+html[dir="ltr"] .input-wrap input { padding: 0 16px 0 48px; }
+html[dir="ltr"] .lookup button[type="submit"] svg { transform: none; }
+html[dir="ltr"] .metric + .metric { border-right: 0; border-left: 1px solid var(--line); }
+html[dir="ltr"] .secure-pill span, html[dir="ltr"] .status-badge span, html[dir="ltr"] .page-footer p:last-child span { margin-left: 0; margin-right: 7px; }
+html[dir="ltr"] .preview-label { right: auto; left: 36px; }
 
 .brand { display: flex; gap: 12px; align-items: center; color: var(--text); text-decoration: none; font-size: 21px; font-weight: 750; }
 .brand-dot { color: var(--teal); }
@@ -187,6 +196,8 @@ h1 em { color: var(--aqua); font-style: normal; font-weight: 520; }
   .topbar, main, .page-footer { width: min(100% - 28px, 1220px); }
   .topbar { height: 74px; }
   .secure-pill { font-size: 9px; }
+  .topbar-actions { gap: 6px; }
+  .language-switch { font-size: 10px; padding: 7px 9px; }
   main { gap: 45px; padding-top: 42px; }
   h1 { font-size: clamp(38px, 10vw, 52px); }
   .hero-copy { font-size: 15px; }
@@ -198,6 +209,7 @@ h1 em { color: var(--aqua); font-style: normal; font-weight: 520; }
   .usage-ring { margin-inline: auto; }
   .metric-grid { grid-template-columns: 1fr; }
   .metric + .metric { border-right: 0; border-top: 1px solid var(--line); }
+  html[dir="ltr"] .metric + .metric { border-left: 0; }
   .metric { padding: 13px 16px; }
   .result-footer { margin-inline: -22px; padding-inline: 22px; }
   .page-footer { padding-block: 25px; gap: 18px; flex-direction: column; text-align: center; }
