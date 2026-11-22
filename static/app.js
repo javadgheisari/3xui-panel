@@ -30,7 +30,7 @@ const translations = {
     '#retry-button': 'Try again',
     '.result-kicker': 'User',
     '.usage-ring@aria-label': 'Internet usage',
-    '.ring-copy small': 'Used',
+    '.ring-copy small': 'Remaining',
     '.usage-primary > p': 'Remaining data',
     '.metric:nth-child(1) span': 'Data used',
     '.metric:nth-child(2) span': 'Total data',
@@ -108,11 +108,12 @@ function render(data) {
   currentData = data;
   currentError = null;
   const unlimited = data.totalGB === 0;
-  const percent = unlimited ? 0 : Math.min(100, Math.max(0, (data.usedTraffic / data.totalGB) * 100));
+  const usedPercent = unlimited ? 0 : Math.min(100, Math.max(0, (data.usedTraffic / data.totalGB) * 100));
+  const remainingPercent = 100 - usedPercent;
   const circumference = 2 * Math.PI * 73;
-  document.querySelector('#ring-value').style.strokeDashoffset = `${circumference * (1 - percent / 100)}`;
-  document.querySelector('#usage-percent').textContent = unlimited ? '∞' : `${number().format(Math.round(percent))}${t('٪', '%')}`;
-  document.querySelector('#progress-bar').style.width = `${percent}%`;
+  document.querySelector('#ring-value').style.strokeDashoffset = `${circumference * (1 - remainingPercent / 100)}`;
+  document.querySelector('#usage-percent').textContent = unlimited ? '∞' : `${number().format(Math.round(remainingPercent))}${t('٪', '%')}`;
+  document.querySelector('#progress-bar').style.width = `${remainingPercent}%`;
   document.querySelector('#client-title').textContent = data.name;
   document.querySelector('#remaining-value').textContent = unlimited ? t('نامحدود', 'Unlimited') : formatBytes(data.remainingTraffic);
   document.querySelector('#usage-summary').textContent = unlimited
